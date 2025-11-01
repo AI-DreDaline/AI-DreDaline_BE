@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: AI-DreDaline_BE
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/adredaline
+    username: postgres
+    password: 1234 #?? ?? ? ?? ??? ????
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+    hibernate:
+      ddl-auto: validate  # ?? : update /????; validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.aidredaline: DEBUG
