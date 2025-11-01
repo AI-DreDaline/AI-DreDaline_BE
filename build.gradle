@@ -30,8 +30,19 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// PostgreSQL
 	runtimeOnly 'org.postgresql:postgresql'
+
+	// PostGIS 지원 (GEOMETRY 타입)
+	implementation 'org.hibernate:hibernate-spatial:6.6.4.Final'
+	implementation 'net.postgis:postgis-jdbc:2023.1.0'
+
+	// JSONB 지원
+	implementation 'com.vladmihalcea:hibernate-types-60:2.21.1'
+
 	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
