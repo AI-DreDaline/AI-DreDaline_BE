@@ -16,7 +16,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TemplateResponse {
 
-    private Long templateId;
+    private Integer templateId;
     private String name;
     private String category;
     private String svgPath;

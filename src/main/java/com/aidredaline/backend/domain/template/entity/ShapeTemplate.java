@@ -1,9 +1,10 @@
 package com.aidredaline.backend.domain.template.entity;
 
-import com.aidredaline.backend.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.LineString;
+
+import java.time.LocalDateTime;
 
 /**
  * 템플릿 엔티티
@@ -18,13 +19,13 @@ import org.locationtech.jts.geom.LineString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ShapeTemplate extends BaseEntity {
+public class ShapeTemplate {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "template_id")
-    private Long templateId;
+    private Integer templateId;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -36,8 +37,8 @@ public class ShapeTemplate extends BaseEntity {
      * 난이도 (예: "easy", "medium", "hard")
      * (향후 템플릿 자체의 복잡도 표시 등에 사용 가능)
      */
-//    @Column(length = 20)
-//    private String difficulty;
+    @Column(length = 20)
+    private String difficulty;
 
     /**
      * SVG 경로 데이터
@@ -71,7 +72,7 @@ public class ShapeTemplate extends BaseEntity {
      * 평균 거리 (km)
      * 이 템플릿으로 생성되는 경로의 예상 거리(참고용)
      */
-    @Column(name = "avg_distance", precision = 10, scale = 2)
+    @Column(name = "avg_distance", columnDefinition = "NUMERIC")
     private Double avgDistance;
 
     /**
@@ -98,4 +99,7 @@ public class ShapeTemplate extends BaseEntity {
      */
     @Column(name = "bounding_box", columnDefinition = "jsonb")
     private String boundingBox;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }
