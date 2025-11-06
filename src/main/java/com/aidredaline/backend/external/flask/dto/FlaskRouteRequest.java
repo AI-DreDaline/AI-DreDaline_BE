@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * Flask 서버로 보내는 경로 생성 요청 DTO
  *
- * Flask API 스펙:
+ * Flask API
  * POST /routes/generate
  * {
  *   "start_point": {"lat": 33.4996, "lng": 126.5312},
