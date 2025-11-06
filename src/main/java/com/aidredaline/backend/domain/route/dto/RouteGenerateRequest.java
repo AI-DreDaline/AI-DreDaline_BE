@@ -23,6 +23,10 @@ import lombok.NoArgsConstructor;
 @Schema(description = "경로 생성 요청")
 public class RouteGenerateRequest {
 
+    @NotNull(message = "사용자 ID는 필수입니다")
+    @Schema(description = "사용자 ID", example = "1", required = true)
+    private Integer userId;
+
     @NotNull(message = "템플릿 ID는 필수입니다")
     @Schema(description = "템플릿 ID", example = "1", required = true)
     private Integer templateId;

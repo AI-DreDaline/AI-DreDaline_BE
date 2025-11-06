@@ -49,7 +49,7 @@ public class TemplateService {
      * @return 템플릿 정보
      * @throws TemplateNotFoundException 템플릿이 존재하지 않을 경우
      */
-    public TemplateResponse getTemplateById(Long templateId) {
+    public TemplateResponse getTemplateById(Integer templateId) {
         log.info("템플릿 조회 시작 - templateId: {}", templateId);
 
         // DB에서 조회, 없으면 예외 발생
@@ -106,7 +106,7 @@ public class TemplateService {
      * - (Flask)RouteService에서 경로 생성 시 템플릿 Entity가 필요
      * - DTO가 아닌 Entity를 반환
      */
-    public ShapeTemplate getTemplateEntityById(Long templateId) {
+    public ShapeTemplate getTemplateEntityById(Integer templateId) {
         return templateRepository.findById(templateId)
                 .orElseThrow(() -> new TemplateNotFoundException(templateId));
     }
