@@ -2,6 +2,8 @@ package com.aidredaline.backend.domain.route.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 
@@ -68,7 +70,8 @@ public class GeneratedRoute {
      * 템플릿 모양과 실제 경로를 겹쳐서 보여주기 위한 데이터
      */
     @Column(name = "shape_overlay_data", columnDefinition = "jsonb")
-    private String shapeOverlayData;
+        @JdbcTypeCode(SqlTypes.JSON) //PostgreSQL JSONB 타입이므로 @Type 지정 필요
+        private String shapeOverlayData;
 
     // 실제 생성된 경로의 거리
     @Column(name = "total_distance", columnDefinition = "NUMERIC")
