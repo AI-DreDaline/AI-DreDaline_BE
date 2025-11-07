@@ -6,11 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface RunningSessionRepository extends JpaRepository<RunningSession, Long> {
+public interface RunningSessionRepository extends JpaRepository<RunningSession, Integer> {
 
-    Page<RunningSession> findByUserIdAndStatusOrderByStartTimeDesc(Long userId, String status, Pageable pageable);
+    Page<RunningSession> findByUserIdAndStatusOrderByStartTimeDesc(Integer userId, String status, Pageable pageable);
 
     @Query("SELECT COUNT(s), COALESCE(SUM(s.actualDistance), 0), COALESCE(AVG(s.averagePace), 0) " +
            "FROM RunningSession s WHERE s.userId = :userId AND s.status = 'completed'")
-    Object[] getStatisticsSummary(Long userId);
+    Object[] getStatisticsSummary(Integer userId);
 }

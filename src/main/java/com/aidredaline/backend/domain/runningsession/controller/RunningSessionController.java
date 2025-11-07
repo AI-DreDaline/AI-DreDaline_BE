@@ -24,40 +24,40 @@ public class RunningSessionController {
     // 2️⃣ GPS 트래킹 데이터 저장
     @PostMapping("/{sessionId}/tracking")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void track(@PathVariable Long sessionId, @RequestBody TrackReq req) {
+    public void track(@PathVariable Integer sessionId, @RequestBody TrackReq req) {
         service.track(sessionId, req);
     }
 
     // 3️⃣ 러닝 일시정지
     @PatchMapping("/{sessionId}/pause")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void pause(@PathVariable Long sessionId) {
+    public void pause(@PathVariable Integer sessionId) {
         service.pause(sessionId);
     }
 
     // 3️⃣ 러닝 재개
     @PatchMapping("/{sessionId}/resume")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void resume(@PathVariable Long sessionId) {
+    public void resume(@PathVariable Integer sessionId) {
         service.resume(sessionId);
     }
 
     // 4️⃣ 러닝 완료 및 분석
     @PostMapping("/{sessionId}/complete")
-    public CompleteSessionRes complete(@PathVariable Long sessionId) {
+    public CompleteSessionRes complete(@PathVariable Integer sessionId) {
         return service.complete(sessionId);
     }
 
     // 5️⃣ 러닝 상세 조회
     @GetMapping("/{sessionId}")
-    public SessionDetailRes getDetail(@PathVariable Long sessionId) {
+    public SessionDetailRes getDetail(@PathVariable Integer sessionId) {
         return service.getDetail(sessionId);
     }
 
     // 5️⃣ 러닝 목록 조회
     @GetMapping
     public Page<SessionItemRes> getList(
-            @RequestParam Long userId,
+            @RequestParam Integer userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -66,13 +66,13 @@ public class RunningSessionController {
 
     // 5️⃣ 통계 조회
     @GetMapping("/statistics/{userId}")
-    public StatisticsRes getStatistics(@PathVariable Long userId) {
+    public StatisticsRes getStatistics(@PathVariable Integer userId) {
         return service.getStatistics(userId);
     }
 
     // 6️⃣ GPS 포인트 목록 조회 (지도 시각화용)
     @GetMapping("/{sessionId}/points")
-    public List<GpsPointRes> getPoints(@PathVariable Long sessionId) {
+    public List<GpsPointRes> getPoints(@PathVariable Integer sessionId) {
         return service.getPoints(sessionId);
     }
 }

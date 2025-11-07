@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record CompleteSessionRes(
-        Long sessionId,
+        Integer sessionId,
         Instant startTime,
         Instant endTime,
         BigDecimal totalDistance,   // m 단위

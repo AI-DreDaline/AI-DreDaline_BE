@@ -16,10 +16,10 @@ public class GpsTrackingPoint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "point_id")
-    private Long pointId;
+    private Integer pointId;
 
     @Column(name = "session_id")
-    private Long sessionId;
+    private Integer sessionId;
 
     @Column(columnDefinition = "geometry(Point, 4326)")
     private Point location;

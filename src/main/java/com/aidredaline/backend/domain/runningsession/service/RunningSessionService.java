@@ -52,7 +52,7 @@ public class RunningSessionService {
 
     // 2️⃣ GPS 트래킹 데이터 저장
     @Transactional
-    public void track(Long sessionId, TrackReq req) {
+    public void track(Integer sessionId, TrackReq req) {
         RunningSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
@@ -74,7 +74,7 @@ public class RunningSessionService {
 
     // 3️⃣ 러닝 일시정지
     @Transactional
-    public void pause(Long sessionId) {
+    public void pause(Integer sessionId) {
         RunningSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!"in_progress".equals(s.getStatus()))
@@ -90,7 +90,7 @@ public class RunningSessionService {
 
     // 3️⃣ 러닝 재개
     @Transactional
-    public void resume(Long sessionId) {
+    public void resume(Integer sessionId) {
         RunningSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!"paused".equals(s.getStatus()))
@@ -116,7 +116,7 @@ public class RunningSessionService {
 
     // 4️⃣ 러닝 완료 및 분석 (거리, 페이스, 칼로리)
     @Transactional
-    public CompleteSessionRes complete(Long sessionId) {
+    public CompleteSessionRes complete(Integer sessionId) {
         RunningSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (!List.of("in_progress", "paused").contains(s.getStatus()))
@@ -162,7 +162,7 @@ public class RunningSessionService {
 
     // 5️⃣ 상세 조회
     @Transactional(readOnly = true)
-    public SessionDetailRes getDetail(Long sessionId) {
+    public SessionDetailRes getDetail(Integer sessionId) {
         RunningSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         return new SessionDetailRes(s.getSessionId(), s.getStartTime(), s.getEndTime(),
@@ -171,7 +171,7 @@ public class RunningSessionService {
 
     // 5️⃣ 목록 조회
     @Transactional(readOnly = true)
-    public Page<SessionItemRes> getList(Long userId, int page, int size) {
+    public Page<SessionItemRes> getList(Integer userId, int page, int size) {
         return sessionRepo.findByUserIdAndStatusOrderByStartTimeDesc(userId, "completed", PageRequest.of(page, size))
                 .map(s -> new SessionItemRes(s.getSessionId(), s.getStartTime(), s.getEndTime(),
                         s.getActualDistance(), s.getAveragePace(), s.getCalories()));
@@ -179,7 +179,7 @@ public class RunningSessionService {
 
     // 5️⃣ 통계 조회
     @Transactional(readOnly = true)
-    public StatisticsRes getStatistics(Long userId) {
+    public StatisticsRes getStatistics(Integer userId) {
         Object[] result = sessionRepo.getStatisticsSummary(userId);
         return new StatisticsRes(((Number) result[0]).intValue(),
                 BigDecimal.valueOf(((Number) result[1]).doubleValue()),
@@ -188,7 +188,7 @@ public class RunningSessionService {
 
     // 6️⃣ GPS 포인트 목록 조회 (지도 시각화용)
     @Transactional(readOnly = true)
-    public List<GpsPointRes> getPoints(Long sessionId) {
+    public List<GpsPointRes> getPoints(Integer sessionId) {
         List<GpsTrackingPoint> points = gpsRepo.findBySessionIdOrderByRecordedAtAsc(sessionId);
         return points.stream()
                 .map(p -> new GpsPointRes(

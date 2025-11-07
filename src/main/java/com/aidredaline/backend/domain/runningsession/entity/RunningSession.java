@@ -20,13 +20,13 @@ public class RunningSession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "session_id")
-    private Long sessionId;
+    private Integer sessionId;
 
     @Column(name = "user_id")
-    private Long userId;
+    private Integer userId;
 
     @Column(name = "route_id")
-    private Long routeId;
+    private Integer routeId;
 
     private String status;
 
