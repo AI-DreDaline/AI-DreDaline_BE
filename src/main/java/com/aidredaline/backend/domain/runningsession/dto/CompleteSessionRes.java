@@ -7,7 +7,7 @@ public record CompleteSessionRes(
         Integer sessionId,
         Instant startTime,
         Instant endTime,
-        BigDecimal totalDistance,   // m 단위
-        BigDecimal averagePace,     // 분/km
+        BigDecimal totalDistance,
+        BigDecimal averagePace,
         Integer calories
 ) {}
