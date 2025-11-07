@@ -243,4 +243,94 @@ public class RouteService {
         // - Frechet Distance
         // - Dynamic Time Warping
     }
+
+    /**
+     * 사용자가 생성된 경로를 마음에 들어해서 저장하는 기능
+     * is_saved = false → true로 변경
+     * @param routeId 경로 ID
+     * @param userId 사용자 ID
+     * @return 저장된 경로 정보
+     */
+    @Transactional
+    public RouteGenerateResponse saveRoute(Integer routeId, Integer userId) {
+        log.info("경로 저장 - routeId: {}, userId: {}", routeId, userId);
+
+        // 1. 경로 조회
+        GeneratedRoute route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new RouteNotFoundException(routeId));
+
+        // 2. 본인의 경로인지 확인
+        if (!route.getUserId().equals(userId)) {
+            log.error("권한 없음 - 경로 소유자: {}, 요청자: {}", route.getUserId(), userId);
+            throw new IllegalArgumentException("본인의 경로만 저장할 수 있습니다.");
+        }
+
+        // 3. 이미 저장된 경로인지 확인
+        if (Boolean.TRUE.equals(route.getIsSaved())) {
+            log.info("이미 저장된 경로입니다 - routeId: {}", routeId);
+        } else {
+            // 4. 저장 처리 (is_saved = true)
+            route.save();
+            routeRepository.save(route);
+            log.info("경로 저장 완료 - routeId: {}", routeId);
+        }
+
+        // 5. 템플릿 이름 조회
+        String templateName = templateRepository.findById(route.getTemplateId())
+                .map(ShapeTemplate::getName)
+                .orElse("Unknown");
+
+        return RouteGenerateResponse.from(route, templateName);
+    }
+
+    /**
+     * 사용자가 저장한 경로들만 조회 (is_saved = true)
+     * 최신순으로 정렬
+     * @param userId 사용자 ID
+     * @return 저장된 경로 목록
+     */
+    public List<RouteGenerateResponse> getSavedRoutes(Integer userId) {
+        log.info("저장된 경로 목록 조회 - userId: {}", userId);
+
+        // 1. is_saved = true인 경로만 조회
+        List<GeneratedRoute> routes = routeRepository
+                .findByUserIdAndIsSavedOrderByCreatedAtDesc(userId, true);
+
+        log.info("저장된 경로 개수: {}", routes.size());
+
+        // 2. Entity → DTO 변환
+        return routes.stream()
+                .map(route -> {
+                    String templateName = templateRepository.findById(route.getTemplateId())
+                            .map(ShapeTemplate::getName)
+                            .orElse("Unknown");
+                    return RouteGenerateResponse.from(route, templateName);
+                })
+                .toList();
+    }
+
+    /**
+     * 사용자가 생성한 경로를 삭제
+     * (임시 경로나 저장된 경로 모두 삭제 가능)
+     * @param routeId 경로 ID
+     * @param userId 사용자 ID
+     */
+    @Transactional
+    public void deleteRoute(Integer routeId, Integer userId) {
+        log.info("경로를 삭제합니다. - routeId: {}, userId: {}", routeId, userId);
+
+        // 1. 경로 조회
+        GeneratedRoute route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new RouteNotFoundException(routeId));
+
+        // 2. 본인의 경로인지 확인
+        if (!route.getUserId().equals(userId)) {
+            log.error("권한 없음 - 경로 소유자: {}, 요청자: {}", route.getUserId(), userId);
+            throw new IllegalArgumentException("본인의 경로만 삭제할 수 있습니다.");
+        }
+
+        // 3. 삭제
+        routeRepository.delete(route);
+        log.info("경로 삭제 완료 - routeId: {}", routeId);
+    }
 }

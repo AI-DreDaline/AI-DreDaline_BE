@@ -91,4 +91,21 @@ public class GeneratedRoute {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * 저장 여부
+     * - false: 임시 생성 (미리보기)
+     * - true: 사용자가 저장한 경로
+     */
+    @Column(name = "is_saved")
+    @Builder.Default
+    private Boolean isSaved = false;
+
+    /**
+     * 경로 저장
+     */
+    public void save() {
+        this.isSaved = true;
+    }
+
 }

@@ -5,9 +5,9 @@ spring:
     active : dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/adredaline
-    username: postgres
-    password: les0805
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
