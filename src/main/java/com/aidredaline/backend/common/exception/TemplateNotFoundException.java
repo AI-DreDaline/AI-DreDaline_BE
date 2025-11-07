@@ -13,7 +13,11 @@ import jakarta.persistence.EntityNotFoundException;
  * - 404 NOT_FOUND 응답 반환
  */
 public class TemplateNotFoundException extends EntityNotFoundException {
-    public TemplateNotFoundException(Long templateId) {
+    public TemplateNotFoundException(String message) {
+        super(message);
+    }
+
+    public TemplateNotFoundException(Integer templateId) {
         super("해당 템플릿을 찾을 수 없습니다. 템플릿ID: " + templateId);
     }
 }

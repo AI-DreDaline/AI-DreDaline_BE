@@ -15,7 +15,7 @@ import java.util.List;
  * - count(): 전체 개수
  */
 @Repository
-public interface ShapeTemplateRepository extends JpaRepository<ShapeTemplate, Long> {
+public interface ShapeTemplateRepository extends JpaRepository<ShapeTemplate, Integer> {
 
     /**
      * (나중에 필요하면)

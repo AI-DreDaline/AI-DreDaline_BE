@@ -1,6 +1,8 @@
 spring:
   application:
     name: AI-DreDaline_BE
+  profiles:
+    active : dev
 
   datasource:
     url: jdbc:postgresql://localhost:5432/adredaline

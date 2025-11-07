@@ -132,7 +132,7 @@ public class TemplateController {
     })
     public ResponseEntity<ApiResponse<TemplateResponse>> getTemplateById(
             @Parameter(description = "템플릿 ID", example = "1")
-            @PathVariable Long templateId
+            @PathVariable Integer templateId
     ) {
         log.info("GET /api/templates/{} - 템플릿 조회 요청", templateId);
 
