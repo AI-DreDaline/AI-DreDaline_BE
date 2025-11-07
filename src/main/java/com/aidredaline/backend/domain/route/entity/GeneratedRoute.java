@@ -101,5 +101,11 @@ public class GeneratedRoute {
     @Builder.Default
     private Boolean isSaved = false;
 
+    /**
+     * 경로 저장
+     */
+    public void save() {
+        this.isSaved = true;
+    }
 
 }

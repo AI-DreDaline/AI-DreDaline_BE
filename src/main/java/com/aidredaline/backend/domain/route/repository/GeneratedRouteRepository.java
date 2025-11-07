@@ -29,4 +29,10 @@ public interface GeneratedRouteRepository extends JpaRepository<GeneratedRoute, 
      * "이 사용자가 이 템플릿으로 만든 경로들"
      */
     List<GeneratedRoute> findByUserIdAndTemplateId(Integer userId, Integer templateId);
+
+    //저장된 경로만 조회 (is_saved = true)인것만.
+    List<GeneratedRoute> findByUserIdAndIsSavedOrderByCreatedAtDesc(
+            Integer userId,
+            Boolean isSaved
+    );
 }

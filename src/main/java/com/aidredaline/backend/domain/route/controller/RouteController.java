@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * - 경로 생성/조회 API 제공
  * Base: /api/routes
@@ -135,7 +137,7 @@ public class RouteController {
     }
 
     /**
-     * GET /api/routes/{id} : 경로 조회
+     * GET /api/routes/{routeId}  : 경로 조회
      * @param routeId 경로 ID
      * @return 경로 정보
      */
@@ -175,5 +177,149 @@ public class RouteController {
 
         log.info("경로 조회 완료 - routeId: {}", routeId);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * POST /api/routes/{routeId}/save : 경로 저장
+     * 추천 경로로 달리기_최종 화면에서 "안내 시작" 버튼 누르면 생성된 경로가 저장되도록
+     * is_saved = false → true로 변경
+     */
+    @PostMapping("/{routeId}/save")
+    @Operation(
+            summary = "경로 저장",
+            description = """
+            생성된 경로를 저장합니다.
+            
+            **사용 시나리오:**
+            1. 사용자가 여러 경로를 생성해봄 (POST /api/routes/generate)
+            2. 마음에 드는 경로 발견
+            3. 저장 버튼 클릭 → 이 API 호출
+            4. is_saved = true로 변경되어 "내 경로" 목록에 표시됨
+            
+            **권한:**
+            - 본인의 경로만 저장 가능
+            - 다른 사용자의 경로 저장 시도 시 400 에러
+            """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "경로 저장 성공",
+                    content = @Content(schema = @Schema(implementation = RouteGenerateResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "권한 없음 (다른 사용자의 경로)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "경로를 찾을 수 없음"
+            )
+    })
+    public ResponseEntity<ApiResponse<RouteGenerateResponse>> saveRoute(
+            @Parameter(description = "경로 ID", example = "1", required = true)
+            @PathVariable Integer routeId,
+
+            @Parameter(description = "사용자 ID (MVP: 요청 파라미터)", example = "1", required = true)
+            @RequestParam Integer userId
+    ) {
+        log.info("POST /api/routes/{}/save - userId: {}", routeId, userId);
+
+        RouteGenerateResponse response = routeService.saveRoute(routeId, userId);
+
+        log.info("경로 저장 완료 - routeId: {}, userId: {}", routeId, userId);
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * GET /api/routes/saved : 나의 경로 목록 조회
+     * (is_saved = true) 저장된 경로 목록 조회
+     */
+    @GetMapping("/saved")
+    @Operation(
+            summary = "저장된 경로 목록",
+            description = """
+            사용자가 저장한 경로 목록을 조회합니다.
+            
+            **필터링:**
+            - is_saved = true인 경로만 반환
+            - 해당 사용자의 경로만 반환
+            - 최신순 정렬 (created_at DESC)
+            
+            **사용 시나리오:**
+            - "내 경로" 화면에서 사용
+            - 저장된 경로 중에서 선택해서 러닝 시작
+            """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = RouteGenerateResponse.class))
+            )
+    })
+    public ResponseEntity<ApiResponse<List<RouteGenerateResponse>>> getSavedRoutes(
+            @Parameter(description = "사용자 ID", example = "1", required = true)
+            @RequestParam Integer userId
+    ) {
+        log.info("GET /api/routes/saved - userId: {}", userId);
+        List<RouteGenerateResponse> routes = routeService.getSavedRoutes(userId);
+
+        log.info("저장된 경로 조회 완료 - userId: {}, 개수: {}", userId, routes.size());
+        return ResponseEntity.ok(ApiResponse.success(routes));
+    }
+
+
+    /**
+     * DELETE /api/routes/{routeId}  : 경로 삭제
+     */
+    @DeleteMapping("/{routeId}")
+    @Operation(
+            summary = "경로 삭제",
+            description = """
+            생성된 경로를 삭제합니다.
+            
+            **사용 시나리오:**
+            - 마음에 안 드는 임시 경로 삭제하는 경우
+            - 저장했던 경로 삭제하는 경우 
+            
+            **권한:**
+            - 본인의 경로만 삭제 가능
+            - 다른 사용자의 경로 삭제 시도 시 400 에러
+            
+            **주의:**
+            - 삭제된 경로는 복구 불가능
+            - 해당 경로로 러닝한 세션 데이터는 유지됨
+            """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "204",
+                    description = "삭제 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "권한 없음 (다른 사용자의 경로)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "경로를 찾을 수 없음"
+            )
+    })
+    public ResponseEntity<ApiResponse<Void>> deleteRoute(
+            @Parameter(description = "경로 ID", example = "1", required = true)
+            @PathVariable Integer routeId,
+
+            @Parameter(description = "사용자 ID (MVP: 요청 파라미터)", example = "1", required = true)
+            @RequestParam Integer userId
+    ) {
+        log.info("DELETE /api/routes/{} - userId: {}", routeId, userId);
+        routeService.deleteRoute(routeId, userId);
+
+        log.info("경로 삭제 완료 - routeId: {}, userId: {}", routeId, userId);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
     }
 }
