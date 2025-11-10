@@ -28,6 +28,7 @@ import java.util.*;
  * - 4️⃣ 러닝 완료 (거리/페이스/칼로리 계산)
  * - 5️⃣ 상세/목록/통계 조회
  * - 6️⃣ GPS 포인트 목록 조회 (지도용)
+ * - 7️⃣ 완료 목록 페이지네이션 + 요약 통계
  */
 @Service
 @RequiredArgsConstructor
@@ -169,22 +170,41 @@ public class RunningSessionService {
                 s.getActualDistance(), s.getAveragePace(), s.getCalories(), s.getStatus());
     }
 
-    // 5️⃣ 목록 조회
+    // 7️⃣ 러닝 목록 조회 (완료된 세션만, 최신순)
     @Transactional(readOnly = true)
     public Page<SessionItemRes> getList(Integer userId, int page, int size) {
         return sessionRepo.findByUserIdAndStatusOrderByStartTimeDesc(userId, "completed", PageRequest.of(page, size))
-                .map(s -> new SessionItemRes(s.getSessionId(), s.getStartTime(), s.getEndTime(),
-                        s.getActualDistance(), s.getAveragePace(), s.getCalories()));
+                .map(s -> new SessionItemRes(
+                        s.getSessionId(),
+                        s.getStartTime(),
+                        s.getEndTime(),
+                        s.getActualDistance(),
+                        s.getAveragePace(),
+                        s.getCalories()
+                ));
     }
 
-    // 5️⃣ 통계 조회
+    // 7️⃣ 사용자 통계 요약 (완료 기준: 총 횟수 / 총 거리 / 평균 페이스)
     @Transactional(readOnly = true)
     public StatisticsRes getStatistics(Integer userId) {
-        Object[] result = sessionRepo.getStatisticsSummary(userId);
-        return new StatisticsRes(((Number) result[0]).intValue(),
-                BigDecimal.valueOf(((Number) result[1]).doubleValue()),
-                BigDecimal.valueOf(((Number) result[2]).doubleValue()));
+        List<Object[]> results = sessionRepo.getStatisticsSummary(userId);
+
+        if (results == null || results.isEmpty()) {
+            return new StatisticsRes(0, BigDecimal.ZERO, BigDecimal.ZERO);
+        }
+
+        Object[] row = results.get(0);
+        Number count = (Number) row[0];
+        Number totalDistance = (Number) row[1];
+        Number avgPace = (Number) row[2];
+
+        return new StatisticsRes(
+                count.intValue(),
+                BigDecimal.valueOf(totalDistance.doubleValue()),
+                BigDecimal.valueOf(avgPace.doubleValue())
+        );
     }
+
 
     // 6️⃣ GPS 포인트 목록 조회 (지도 시각화용)
     @Transactional(readOnly = true)
@@ -201,4 +221,75 @@ public class RunningSessionService {
                 ))
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public AnalysisRes analyze(Integer sessionId) {
+        RunningSession s = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        var points = gpsRepo.findBySessionIdOrderByRecordedAtAsc(sessionId);
+
+        if (points.isEmpty()) {
+            return new AnalysisRes(s.getSessionId(), BigDecimal.ZERO, BigDecimal.ZERO,
+                    BigDecimal.ZERO, BigDecimal.ZERO, 0, List.of());
+        }
+
+        // 거리, 속도, 페이스 계산
+        BigDecimal totalDistance = BigDecimal.ZERO;
+        double maxSpeed = 0;
+        double totalSpeed = 0;
+        int totalCalories = 0;
+        List<AnalysisRes.KmSplit> splits = new ArrayList<>();
+
+        BigDecimal segmentDistance = BigDecimal.ZERO;
+        Instant segmentStart = points.get(0).getRecordedAt();
+
+        for (int i = 1; i < points.size(); i++) {
+            double dist = distance(points.get(i - 1).getLocation(), points.get(i).getLocation());
+            totalDistance = totalDistance.add(BigDecimal.valueOf(dist));
+            segmentDistance = segmentDistance.add(BigDecimal.valueOf(dist));
+
+            double speed = Optional.ofNullable(points.get(i).getSpeed())
+                    .map(BigDecimal::doubleValue)
+                    .orElse(0.0);
+
+            totalSpeed += speed;
+            maxSpeed = Math.max(maxSpeed, speed);
+
+            // 1km 마다 split 기록
+            if (segmentDistance.doubleValue() >= 1000.0 || i == points.size() - 1) {
+                Instant segmentEnd = points.get(i).getRecordedAt();
+                double seconds = Duration.between(segmentStart, segmentEnd).getSeconds();
+                BigDecimal minutes = BigDecimal.valueOf(seconds / 60.0);
+                BigDecimal km = segmentDistance.divide(BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
+                BigDecimal pace = km.compareTo(BigDecimal.ZERO) > 0 ?
+                        minutes.divide(km, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+                int calories = km.multiply(BigDecimal.valueOf(60)).intValue();
+                totalCalories += calories;
+
+                splits.add(new AnalysisRes.KmSplit(
+                        splits.size() + 1,
+                        segmentDistance,
+                        pace,
+                        calories
+                ));
+
+                segmentDistance = BigDecimal.ZERO;
+                segmentStart = segmentEnd;
+            }
+        }
+
+        BigDecimal avgSpeed = BigDecimal.valueOf(totalSpeed / points.size());
+        BigDecimal avgPace = s.getAveragePace() != null ? s.getAveragePace() : BigDecimal.ZERO;
+
+        return new AnalysisRes(
+                s.getSessionId(),
+                totalDistance,
+                avgPace,
+                BigDecimal.valueOf(maxSpeed),
+                avgSpeed,
+                totalCalories,
+                splits
+        );
+    }
+
 }

@@ -54,7 +54,13 @@ public class RunningSessionController {
         return service.getDetail(sessionId);
     }
 
-    // 5️⃣ 러닝 목록 조회
+    // 6️⃣ GPS 포인트 목록 조회 (지도 시각화용)
+    @GetMapping("/{sessionId}/points")
+    public List<GpsPointRes> getPoints(@PathVariable Integer sessionId) {
+        return service.getPoints(sessionId);
+    }
+
+    // 7️⃣ 러닝 목록 조회 (완료된 세션만, 최신순, 페이지네이션)
     @GetMapping
     public Page<SessionItemRes> getList(
             @RequestParam Integer userId,
@@ -64,15 +70,20 @@ public class RunningSessionController {
         return service.getList(userId, page, size);
     }
 
-    // 5️⃣ 통계 조회
+    // 7️⃣ 사용자 통계 요약 (완료 기준: 총 횟수 / 총 거리 / 평균 페이스)
     @GetMapping("/statistics/{userId}")
     public StatisticsRes getStatistics(@PathVariable Integer userId) {
         return service.getStatistics(userId);
     }
 
-    // 6️⃣ GPS 포인트 목록 조회 (지도 시각화용)
-    @GetMapping("/{sessionId}/points")
-    public List<GpsPointRes> getPoints(@PathVariable Integer sessionId) {
-        return service.getPoints(sessionId);
+    // 8️⃣ 러닝 세션 상세 분석
+    @GetMapping("/{sessionId}/analysis")
+    public AnalysisRes analyze(@PathVariable Integer sessionId) {
+        return service.analyze(sessionId);
     }
+
+
 }
+
+
+
