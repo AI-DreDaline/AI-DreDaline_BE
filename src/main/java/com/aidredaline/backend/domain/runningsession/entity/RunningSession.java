@@ -67,6 +67,9 @@ public class RunningSession {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+//    @Column(name = "completion_rate", columnDefinition = "NUMERIC(5,2)")
+//    private BigDecimal completionRate;
+
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();

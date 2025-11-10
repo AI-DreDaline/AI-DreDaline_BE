@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -75,7 +76,7 @@ public class GeneratedRoute {
 
     // 실제 생성된 경로의 거리
     @Column(name = "total_distance", columnDefinition = "NUMERIC")
-    private Double totalDistance;
+    private BigDecimal totalDistance;
 
     //평균 페이스 기준 예상 소요 시간 - 추후에 사용자 데이터 쌓이면 이용 가능
     @Column(name = "expected_duration")
@@ -86,7 +87,7 @@ public class GeneratedRoute {
      * 템플릿 모양과 생성된 경로의 유사도
      */
     @Column(name = "similarity_score", columnDefinition = "NUMERIC")
-    private Double similarityScore;
+    private BigDecimal similarityScore;
 
 
     @Column(name = "created_at", insertable = false, updatable = false)

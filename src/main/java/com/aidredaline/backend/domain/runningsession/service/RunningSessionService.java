@@ -1,5 +1,7 @@
 package com.aidredaline.backend.domain.runningsession.service;
 
+import com.aidredaline.backend.domain.route.entity.GeneratedRoute;
+import com.aidredaline.backend.domain.route.repository.GeneratedRouteRepository;
 import com.aidredaline.backend.domain.runningsession.dto.*;
 import com.aidredaline.backend.domain.runningsession.entity.GpsTrackingPoint;
 import com.aidredaline.backend.domain.runningsession.entity.RunningSession;
@@ -36,6 +38,7 @@ public class RunningSessionService {
 
     private final RunningSessionRepository sessionRepo;
     private final GpsTrackingPointRepository gpsRepo;
+    private final GeneratedRouteRepository routeRepo;
     private final GeoFactory geo;
 
     // 1️⃣ 러닝 세션 시작
@@ -130,15 +133,20 @@ public class RunningSessionService {
         var points = gpsRepo.findBySessionIdOrderByRecordedAtAsc(sessionId);
         BigDecimal totalDistance = BigDecimal.ZERO;
         for (int i = 1; i < points.size(); i++)
-            totalDistance = totalDistance.add(BigDecimal.valueOf(distance(points.get(i - 1).getLocation(), points.get(i).getLocation())));
+            totalDistance = totalDistance.add(BigDecimal.valueOf(
+                    distance(points.get(i - 1).getLocation(), points.get(i).getLocation())
+            ));
 
         long movingSeconds = Duration.between(s.getStartTime(), endTime).getSeconds()
                 - Optional.ofNullable(s.getTotalPausedDuration()).orElse(0);
         s.setMovingTime((int) movingSeconds);
 
-        BigDecimal minutes = BigDecimal.valueOf(movingSeconds).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+        BigDecimal minutes = BigDecimal.valueOf(movingSeconds)
+                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
         BigDecimal km = totalDistance.divide(BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
-        BigDecimal pace = km.compareTo(BigDecimal.ZERO) > 0 ? minutes.divide(km, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        BigDecimal pace = km.compareTo(BigDecimal.ZERO) > 0
+                ? minutes.divide(km, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
         int calories = km.multiply(BigDecimal.valueOf(60)).intValue();
         s.setCalories(calories);
@@ -146,7 +154,36 @@ public class RunningSessionService {
         s.setAveragePace(pace);
 
         sessionRepo.save(s);
-        return new CompleteSessionRes(s.getSessionId(), s.getStartTime(), s.getEndTime(), totalDistance, pace, calories);
+
+        //완료율 계산(저장하진 않고)
+        BigDecimal completionRate = calculateCompletionRate(s.getRouteId(), totalDistance);
+
+        return new CompleteSessionRes(
+                s.getSessionId(),
+                s.getStartTime(),
+                s.getEndTime(),
+                totalDistance,
+                pace,
+                calories,
+                completionRate
+        );
+    }
+
+//완료율 계산 메서드
+    private BigDecimal calculateCompletionRate(Integer routeId, BigDecimal actualDistance) {
+        if (routeId == null) return BigDecimal.ZERO;
+
+        return routeRepo.findById(routeId)
+                .map(route -> {
+                    BigDecimal targetDistance = route.getTotalDistance();
+                    if (targetDistance == null || targetDistance.compareTo(BigDecimal.ZERO) == 0) {
+                        return BigDecimal.ZERO;
+                    }
+                    return actualDistance
+                            .divide(targetDistance, 4, RoundingMode.HALF_UP)
+                            .multiply(BigDecimal.valueOf(100));
+                })
+                .orElse(BigDecimal.ZERO);
     }
 
     // 내부 거리 계산 (Haversine)

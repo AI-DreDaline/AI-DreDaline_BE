@@ -9,5 +9,6 @@ public record CompleteSessionRes(
         Instant endTime,
         BigDecimal totalDistance,
         BigDecimal averagePace,
-        Integer calories
+        Integer calories,
+        BigDecimal completionRate
 ) {}
