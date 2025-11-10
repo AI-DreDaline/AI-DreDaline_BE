@@ -21,6 +21,8 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 /**
@@ -177,13 +179,14 @@ public class RouteService {
         }
 
         // 거리 계산 (미터 → km)
-        Double totalDistanceKm = metrics.getRouteLengthM() / 1000.0;
+        BigDecimal totalDistanceKm = BigDecimal.valueOf(metrics.getRouteLengthM())
+                .divide(BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
 
         // 예상 소요 시간 계산 (6:00 페이스로 계산했음)
-        Integer expectedDuration = (int) (totalDistanceKm * 6 * 60);
+        Integer expectedDuration = (int) (totalDistanceKm.doubleValue() * 6 * 60);
 
         // 유사도 점수 (Mock에서는 랜덤, Real에서는 실제 계산값)
-        Double similarityScore = calculateSimilarityScore(routePath, originalShape);
+        BigDecimal similarityScore = calculateSimilarityScore(routePath, originalShape);
 
         return GeneratedRoute.builder()
                 .userId(request.getUserId())
@@ -234,9 +237,11 @@ public class RouteService {
      * @param originalShape 원본 템플릿 형태
      * @return 유사도 점수 (0.0 ~ 1.0)
      */
-    private Double calculateSimilarityScore(LineString routePath, LineString originalShape) {
+
+    private BigDecimal calculateSimilarityScore(LineString routePath, LineString originalShape) {
         // MVP: 간단하게 랜덤 값 (0.85 ~ 0.95)
-        return 0.85 + (Math.random() * 0.10);
+        double randomScore = 0.85 + (Math.random() * 0.10);
+        return BigDecimal.valueOf(randomScore).setScale(2, RoundingMode.HALF_UP);
 
         // TODO: 실제 유사도 계산 알고리즘
         // - Hausdorff Distance

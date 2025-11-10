@@ -8,6 +8,7 @@ import lombok.Getter;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +38,13 @@ public class RouteGenerateResponse {
     private String templateName;
 
     @Schema(description = "총 거리 (km)", example = "5.2")
-    private Double totalDistance;
+    private BigDecimal totalDistance;
 
     @Schema(description = "예상 소요 시간 (초)", example = "1800")
     private Integer expectedDuration;
 
     @Schema(description = "템플릿 유사도 점수", example = "0.92")
-    private Double similarityScore;
+    private BigDecimal similarityScore;
 
     /**
      * 경로 좌표 배열
