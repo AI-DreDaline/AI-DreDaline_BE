@@ -23,6 +23,7 @@ http://localhost:8080/swagger-ui.html
 
 ## 📚 API 문서
 - Swagger UI: http://localhost:8080/swagger-ui.html
+- api 테스트(도현) :https://accessible-drain-f22.notion.site/2a7312e1be938056bea7ebc2e0f1c47e
 
 ## 🌿 브랜치 전략
 - `main`: 프로덕션
@@ -38,3 +39,5 @@ chore: 빌드, 패키지 관리
 refactor: 코드 리팩토링
 test: 테스트 코드
 ```
+
+

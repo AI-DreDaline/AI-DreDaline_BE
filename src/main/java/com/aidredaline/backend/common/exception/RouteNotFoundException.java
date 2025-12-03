@@ -13,7 +13,11 @@ import jakarta.persistence.EntityNotFoundException;
  * - 메시지: "Route not found with id: 123"
  */
 public class RouteNotFoundException extends EntityNotFoundException {
-    public RouteNotFoundException(Long routeId) {
+    public RouteNotFoundException(String message) {
+        super(message);
+    }
+
+    public RouteNotFoundException(Integer routeId) {
         super("해당 경로는 찾을 수 없습니다. 경로ID: " + routeId);
     }
 }

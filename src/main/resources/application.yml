@@ -1,11 +1,13 @@
 spring:
   application:
     name: AI-DreDaline_BE
+  profiles:
+    active : dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/adredaline
-    username: postgres
-    password: 1234 #?? ?? ? ?? ??? ????
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
