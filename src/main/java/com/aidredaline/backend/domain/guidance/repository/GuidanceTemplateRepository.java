@@ -1,6 +1,6 @@
-package com.aidredaline.backend.guidance.repository;
+package com.aidredaline.backend.domain.guidance.repository;
 
-import com.aidredaline.backend.guidance.entity.GuidanceTemplate;
+import com.aidredaline.backend.domain.guidance.entity.GuidanceTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package com.aidredaline.backend.guidance.dto;
+package com.aidredaline.backend.domain.guidance.dto;
 
 import lombok.*;
 
