@@ -1,6 +1,8 @@
 package com.aidredaline.backend.domain.runningsession.service;
 
 import com.aidredaline.backend.domain.route.entity.GeneratedRoute;
+import com.aidredaline.backend.domain.guidance.dto.GuidancePointDto;
+import com.aidredaline.backend.domain.guidance.service.VoiceGuidanceService;
 import com.aidredaline.backend.domain.route.repository.GeneratedRouteRepository;
 import com.aidredaline.backend.domain.runningsession.dto.*;
 import com.aidredaline.backend.domain.runningsession.entity.GpsTrackingPoint;
@@ -39,11 +41,13 @@ public class RunningSessionService {
     private final RunningSessionRepository sessionRepo;
     private final GpsTrackingPointRepository gpsRepo;
     private final GeneratedRouteRepository routeRepo;
+    private final VoiceGuidanceService voiceGuidanceService;
     private final GeoFactory geo;
 
-    // 1️⃣ 러닝 세션 시작
+    // 1️⃣ 러닝 세션 시작 (음성안내 데이터 포함)
     @Transactional
     public StartSessionRes start(StartSessionReq req) {
+        //세션 생성
         RunningSession s = new RunningSession();
         s.setUserId(req.userId());
         s.setRouteId(req.routeId());
@@ -51,7 +55,17 @@ public class RunningSessionService {
         s.setStatus("in_progress");
         s.setCurrentPosition(geo.point(req.startLat(), req.startLng()));
         sessionRepo.save(s);
-        return new StartSessionRes(s.getSessionId(), s.getStatus(), s.getStartTime());
+
+        // 음성 안내 데이터 조회
+        List<GuidancePointDto> guidancePoints =
+                voiceGuidanceService.getGuidancePoints(req.routeId());
+
+        return new StartSessionRes(
+                s.getSessionId(),
+                s.getStatus(),
+                s.getStartTime(),
+                guidancePoints
+        );
     }
 
     // 2️⃣ GPS 트래킹 데이터 저장
