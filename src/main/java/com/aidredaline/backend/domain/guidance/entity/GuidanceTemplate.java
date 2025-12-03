@@ -1,4 +1,4 @@
-package com.aidredaline.backend.guidance.entity;
+package com.aidredaline.backend.domain.guidance.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
