@@ -27,9 +27,9 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        //TODO 프론트랑 AI 서버 포트 번호 물어보고 다시 수정할 것
+
                         "http://localhost:3000",  // React 개발 서버
-                        "http://localhost:8081"   // 다른 포트
+                        "http://localhost:5001"   // flask 개발 서버
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

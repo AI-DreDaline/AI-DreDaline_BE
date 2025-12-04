@@ -6,7 +6,7 @@ import com.aidredaline.backend.external.flask.dto.FlaskRouteResponse;
 /**
  * - Flask 서버와의 통신 추상화
  * - MockFlaskClient: 개발용 (Flask 없이 테스트)
- * - RealFlaskClient: 운영용 (실제 Flask 호출) - 개발 예정
+ * - RealFlaskClient: 운영용 (실제 Flask 호출)
  */
 public interface FlaskClient {
 
