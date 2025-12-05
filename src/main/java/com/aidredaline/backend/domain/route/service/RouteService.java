@@ -11,6 +11,7 @@ import com.aidredaline.backend.domain.template.repository.ShapeTemplateRepositor
 import com.aidredaline.backend.external.flask.FlaskClient;
 import com.aidredaline.backend.external.flask.dto.FlaskRouteRequest;
 import com.aidredaline.backend.external.flask.dto.FlaskRouteResponse;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -18,6 +19,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,10 +47,14 @@ public class RouteService {
     private final GeneratedRouteRepository routeRepository;
     private final ShapeTemplateRepository templateRepository;
     private final FlaskClient flaskClient;  // Mock 또는 Real이 자동 주입됨!
+    private final EntityManager entityManager;
 
     // PostGIS용 GeometryFactory (SRID 4326 = WGS84)
     private final GeometryFactory geometryFactory =
             new GeometryFactory(new PrecisionModel(), 4326);
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     /**
      * [경로 생성 플로우]
@@ -114,16 +120,22 @@ public class RouteService {
         GeneratedRoute savedRoute = routeRepository.save(route);
         log.info("DB 저장 완료 - routeId: {}", savedRoute.getRouteId());
 
+        entityManager.flush();
+        entityManager.refresh(savedRoute);
+
         // 6. Entity → DTO 변환
         RouteGenerateResponse response = RouteGenerateResponse.from(
                 savedRoute,
-                template.getName()
+                template.getName(),
+                flaskResponse,   // 플라스크 응답 포함
+                baseUrl
         );
 
         log.info("경로 생성 완료");
         log.info("routeId: {}", response.getRouteId());
         log.info("totalDistance: {}km", response.getTotalDistance());
         log.info("노드 개수: {}", response.getRoutePath().size());
+
 
         return response;
     }
@@ -163,14 +175,35 @@ public class RouteService {
         FlaskRouteResponse.FlaskDataDto data = flaskResponse.getData();
         FlaskRouteResponse.FlaskMetricsDto metrics = data.getMetrics();
 
+        log.info("=== Flask 응답 데이터 확인 ===");
+        log.info("finalPoints가 null인가? {}", data.getFinalPoints() == null);
+
+        //getActualCoordinates() 호출
+        List<List<Double>> coordinates = data.getActualCoordinates();
+
+        log.info("getActualCoordinates() 결과 null? {}", coordinates == null);
+        if (coordinates != null) {
+            log.info("좌표 개수: {}", coordinates.size());
+            if (!coordinates.isEmpty()) {
+                log.info("첫 번째 좌표: {}", coordinates.get(0));
+            }
+        }
+
         // 시작점 생성 (PostGIS Point)
         Point startPoint = createPoint(
                 request.getStartPoint().getLongitude(),
                 request.getStartPoint().getLatitude()
         );
 
+        log.info("=== LineString 생성 시작 ===");
         // 경로 생성 (PostGIS LineString)
-        LineString routePath = createLineString(data.getFinalPoints());
+        LineString routePath = createLineString(coordinates);
+
+        log.info("생성된 routePath가 null인가? {}", routePath == null);
+        if (routePath != null) {
+            log.info("routePath 포인트 수: {}", routePath.getNumPoints());
+            log.info("routePath SRID: {}", routePath.getSRID());
+        }
 
         //원본 템플릿 형태 (있다면)
         LineString originalShape = null;
@@ -185,10 +218,10 @@ public class RouteService {
         // 예상 소요 시간 계산 (6:00 페이스로 계산했음)
         Integer expectedDuration = (int) (totalDistanceKm.doubleValue() * 6 * 60);
 
-        // 유사도 점수 (Mock에서는 랜덤, Real에서는 실제 계산값)
+        // 유사도 점수
         BigDecimal similarityScore = calculateSimilarityScore(routePath, originalShape);
 
-        return GeneratedRoute.builder()
+        GeneratedRoute route = GeneratedRoute.builder()
                 .userId(request.getUserId())
                 .templateId(template.getTemplateId())
                 .startPoint(startPoint)
@@ -198,6 +231,14 @@ public class RouteService {
                 .expectedDuration(expectedDuration)
                 .similarityScore(similarityScore)
                 .build();
+
+        log.info("=== Entity 생성 완료 ===");
+        log.info("Entity의 routePath가 null인가? {}", route.getRoutePath() == null);
+        if (route.getRoutePath() != null) {
+            log.info("Entity의 routePath 포인트 수: {}", route.getRoutePath().getNumPoints());
+        }
+
+        return route;
     }
 
     /**
