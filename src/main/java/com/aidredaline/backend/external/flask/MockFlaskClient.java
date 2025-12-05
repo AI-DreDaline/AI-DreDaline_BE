@@ -16,8 +16,8 @@ import java.util.Random;
  * 활성화:
  * - @Profile("!prod"): 개발/테스트 환경에서만 사용
  */
-@Component
-@Profile("!prod")
+//@Component
+@Profile("mock")
 @Slf4j
 public class MockFlaskClient implements FlaskClient {
 
