@@ -1,6 +1,8 @@
 package com.aidredaline.backend.domain.route.dto;
 
+import com.aidredaline.backend.domain.guidance.dto.GuidancePointDto;
 import com.aidredaline.backend.domain.route.entity.GeneratedRoute;
+import com.aidredaline.backend.external.flask.dto.FlaskRouteResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,6 +58,9 @@ public class RouteGenerateResponse {
     @Schema(description = "생성 시각", example = "2025-11-05T23:10:00")
     private LocalDateTime createdAt;
 
+    @Schema(description = "음성 안내 포인트 목록")
+    private List<GuidancePointDto> guidancePoints;
+
 
     public static RouteGenerateResponse from(GeneratedRoute route, String templateName) {
         return RouteGenerateResponse.builder()
@@ -66,6 +71,41 @@ public class RouteGenerateResponse {
                 .expectedDuration(route.getExpectedDuration())
                 .similarityScore(route.getSimilarityScore())
                 .routePath(convertLineStringToPoints(route.getRoutePath()))
+                .createdAt(route.getCreatedAt())
+                .build();
+    }
+
+    /**
+     * Flask 응답 포함 → DTO 변환 (음성 안내 포함)
+     */
+    public static RouteGenerateResponse from(
+            GeneratedRoute route,
+            String templateName,
+            FlaskRouteResponse flaskResponse,
+            String baseUrl
+    ) {
+        // 음성 안내 포인트 변환
+        List<GuidancePointDto> guidancePoints = null;
+        if (flaskResponse != null
+                && flaskResponse.getData() != null
+                && flaskResponse.getData().getGuidance() != null
+                && flaskResponse.getData().getGuidance().getGuidancePoints() != null) {
+
+            guidancePoints = flaskResponse.getData().getGuidance().getGuidancePoints()
+                    .stream()
+                    .map(point -> GuidancePointDto.from(point, baseUrl))
+                    .toList();
+        }
+
+        return RouteGenerateResponse.builder()
+                .routeId(route.getRouteId())
+                .templateId(route.getTemplateId())
+                .templateName(templateName)
+                .totalDistance(route.getTotalDistance())
+                .expectedDuration(route.getExpectedDuration())
+                .similarityScore(route.getSimilarityScore())
+                .routePath(convertLineStringToPoints(route.getRoutePath()))
+                .guidancePoints(guidancePoints)
                 .createdAt(route.getCreatedAt())
                 .build();
     }

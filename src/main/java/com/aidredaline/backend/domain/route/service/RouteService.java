@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,9 @@ public class RouteService {
     // PostGIS용 GeometryFactory (SRID 4326 = WGS84)
     private final GeometryFactory geometryFactory =
             new GeometryFactory(new PrecisionModel(), 4326);
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     /**
      * [경로 생성 플로우]
@@ -122,7 +126,9 @@ public class RouteService {
         // 6. Entity → DTO 변환
         RouteGenerateResponse response = RouteGenerateResponse.from(
                 savedRoute,
-                template.getName()
+                template.getName(),
+                flaskResponse,   // 플라스크 응답 포함
+                baseUrl
         );
 
         log.info("경로 생성 완료");
@@ -172,7 +178,7 @@ public class RouteService {
         log.info("=== Flask 응답 데이터 확인 ===");
         log.info("finalPoints가 null인가? {}", data.getFinalPoints() == null);
 
-        // ⭐⭐⭐ 여기가 핵심! getActualCoordinates() 호출!
+        //getActualCoordinates() 호출
         List<List<Double>> coordinates = data.getActualCoordinates();
 
         log.info("getActualCoordinates() 결과 null? {}", coordinates == null);
